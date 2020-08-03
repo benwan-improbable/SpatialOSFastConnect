@@ -10,6 +10,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\SpatialOSFastCore\SpatialOSFastCore.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="operate.exe">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

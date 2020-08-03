@@ -78,7 +78,7 @@ namespace SpatialOSFastConnect
             });
             data.Add("cn-production", new SpatialEnvironment
             {
-                locatorHost = "locatorHost=locator.spatialoschina.com",
+                locatorHost = "locator.spatialoschina.com",
                 infraServicesUrl = "api.spatial.spatialoschina.com"
             });
         }

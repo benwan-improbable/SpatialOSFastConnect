@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace SpatialOSFastConnect
 {
@@ -10,14 +11,21 @@ namespace SpatialOSFastConnect
         const string ClientPath = @"C:\Users\WanXi\Documents\Unity\tank-demo-ini\workers\unity\build\worker\UnityClient@Windows\";
         static void Main(string[] args)
         {
+            ConnectSpatialAsync();
+            Console.ReadLine();
+        }
 
-            var tokenSecret = FastRuntimeCmd.GenerateAuthToken(chinf, environment);
-            var playerIdentityToken = FastRuntimeCmd.GeneratePlayerIdentifyToken(tokenSecret, playerIdentifier, environment);
-            var data = FastRuntimeCmd.GenerateLoginToken(playerIdentityToken, environment);
-            data.TryGetValue("loginToken", out string loginToken);
-            data.TryGetValue("deploymentName", out string deploymentName);
-            FastRuntimeCmd.StartClient(ClientPath, chinf, deploymentName, loginToken, playerIdentityToken, environment);
-            // Console.ReadKey();
+        public static async void ConnectSpatialAsync()
+        {
+            Console.WriteLine("Await Taskfunction Start");
+            await Task.Run(() => {
+                var tokenSecret = FastRuntimeCmd.GenerateAuthToken(chinf, environment);
+                var playerIdentityToken = FastRuntimeCmd.GeneratePlayerIdentifyToken(tokenSecret, playerIdentifier, environment);
+                var data = FastRuntimeCmd.GenerateLoginToken(playerIdentityToken, environment);
+                data.TryGetValue("loginToken", out string loginToken);
+                data.TryGetValue("deploymentName", out string deploymentName);
+                FastRuntimeCmd.StartClient(ClientPath, chinf, deploymentName, loginToken, playerIdentityToken, environment);
+            });
         }
     }
 }

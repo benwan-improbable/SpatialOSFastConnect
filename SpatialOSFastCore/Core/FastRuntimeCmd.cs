@@ -7,21 +7,20 @@ using System.Text;
 
 namespace SpatialOSFastConnect
 {
-    class FastRuntimeCmd
+    public class FastRuntimeCmd
     {
         const string SpatialCmd = @"spatial";
         const string OperateCmd = @".\operate.exe";
         const string CmdPath = @"C:\Windows\System32\cmd.exe";
 
         //Generate dev auth token with the command
-        public static string GenerateAuthToken(string chinf, string environment, string description = "description")
+        public static string GenerateAuthToken(string chinf, string environment, string description = "default description")
         {
             string[] arguments = new string[3];
             arguments[0] = string.Format(@"project auth dev-auth-token create --description=""{0}""", description);
-            arguments[1] = string.Format(@"--project_name {0} --environment={1}", chinf, environment);
-            arguments[2] = string.Format(@"--lifetime=""24h10m20s"" --json_output");
+            arguments[1] = string.Format(@"--project_name {0} --lifetime=""24h10m20s""", chinf);
+            arguments[2] = string.Format(@"--environment={0} --json_output", environment);
 
-            //string arguments = string.Format(@"project auth dev-auth-token create --description=""{0}"" --lifetime=""24h10m20s"" --project_name {1} --environment={2} --json_output", description, chinf, environment);
             var outJson = RunExternalExe(SpatialCmd, string.Join(" ", arguments));
             var jsonObject = JsonConvert.DeserializeObject<SpatialData>(outJson);
             return jsonObject.json_data.token_secret;
@@ -32,10 +31,9 @@ namespace SpatialOSFastConnect
         public static string GeneratePlayerIdentifyToken(string tokenSecret, string playerIdentifier, string environment) {
             string[] arguments = new string[3];
             arguments[0] = string.Format(@"xavier");
-            arguments[1] = string.Format(@"create-development-pit ""{0}"" {1}", tokenSecret, playerIdentifier);
+            arguments[1] = string.Format(@"create-development-pit {0} {1}", tokenSecret, playerIdentifier);
             arguments[2] = string.Format(@"--environment={0}", environment);
 
-            //string arguments = string.Format(@"xavier create-development-pit ""{0}"" {1} --environment={2}", tokenSecret, playerIdentifier, environment);
             var outJson = RunExternalExe(OperateCmd, string.Join(" ", arguments));
             var start = outJson.IndexOf("{");
             var end = outJson.IndexOf("}");
@@ -48,11 +46,10 @@ namespace SpatialOSFastConnect
         public static Dictionary<string, string> GenerateLoginToken(string playerIdentityToken, string environment) 
         {
             string[] arguments = new string[3];
-            arguments[0] = string.Format(@"xavier --worker_type UnityClient");
-            arguments[1] = string.Format(@"create-development-login-tokens ""{0}""", playerIdentityToken);
-            arguments[2] = string.Format(@"--environment={0}", environment);
+            arguments[0] = string.Format(@"xavier");
+            arguments[1] = string.Format(@"create-development-login-tokens {0}", playerIdentityToken);
+            arguments[2] = string.Format(@"--worker_type UnityClient --environment={0}", environment);
 
-            //string arguments = string.Format(@"xavier create-development-login-tokens ""{0}"" --worker_type UnityClient --environment={1}", playerIdentityToken, environment);
             var outJson = RunExternalExe(OperateCmd, string.Join(" ", arguments));
             var start = outJson.IndexOf("{");
             var end = outJson.IndexOf("]}");
@@ -66,14 +63,15 @@ namespace SpatialOSFastConnect
 
         public static string StartClient(string ClientPath, string chinf, string myassembly, string loginToken , string playerIdentityToken, string environment) 
         {
-            string[] arguments = new string[6];
+            string[] arguments = new string[7];
             arguments[0] = string.Format(@"+projectName {0}", chinf);
             arguments[1] = string.Format(@"+deploymentName {0}", myassembly);
             arguments[2] = string.Format(@"+loginToken {0}", loginToken);
-            arguments[3] = string.Format(@"+playerIdentityToken  {0}", playerIdentityToken);
-            arguments[4] = string.Format(@"+environment  {0}", environment);
+            arguments[3] = string.Format(@"+playerIdentityToken {0}", playerIdentityToken);
+            arguments[4] = string.Format(@"+environment {0}", environment);
             SpatialEnvironmentConfig.data.TryGetValue(environment, out SpatialEnvironment env);
-            arguments[5] = string.Format(@"+locatorHost  {0}", env.locatorHost);
+            arguments[5] = string.Format(@"+locatorHost {0}", env.locatorHost);
+            arguments[6] = string.Format(@"+infraServicesUrl {0}", env.infraServicesUrl);
             var outJson = RunExternalExe(ClientPath + "UnityClient@Windows.exe", string.Join(" ", arguments));
             return outJson;
         }
@@ -87,9 +85,9 @@ namespace SpatialOSFastConnect
             {
                 process.StartInfo.Arguments = arguments;
             }
-
+#if Debug
             Console.WriteLine("cmd:" + filename + " " +arguments);
-
+#endif
             process.StartInfo.CreateNoWindow = true;
             process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
             process.StartInfo.UseShellExecute = false;
@@ -114,6 +112,9 @@ namespace SpatialOSFastConnect
 
             if (process.ExitCode == 0)
             {
+#if Debug
+                Console.WriteLine("stdOutput: " + stdOutput);
+#endif
                 return stdOutput.ToString();
             }
             else
